@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Alien Stage x 🏹</title>
+  <style>
+    body {
+      background: #cce3ff;
+      margin: 0;
+      overflow: hidden;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(to top, #7ec850 60%, #cce3ff 100%);
+      box-shadow: 0 0 20px #0004;
+      border-radius: 10px;
+    }
+    #startScreen, #selectScreen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw; height: 100vh;
+      background: #cce3ff;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Arial Black', Arial, sans-serif;
+    }
+    #startScreen {
+      background: linear-gradient(to bottom, #cce3ff 80%, #7ec850 100%);
+    }
+    #selectScreen {
+      background: linear-gradient(to bottom, #e3e6fa 70%, #7ec850 100%);
+    }
+    .start-title {
+      font-size: 44px;
+      color: #187b2b;
+      text-shadow: 2px 2px 12px #0006, 0px 0px 12px #ffd700;
+      margin-bottom: 38px;
+    }
+    .start-btn {
+      font-size: 30px;
+      padding: 22px 55px;
+      border-radius: 16px;
+      background: #ffd700;
+      color: #187b2b;
+      font-weight: bold;
+      border: none;
+      box-shadow: 0 0 12px #0004;
+      cursor: pointer;
+      margin-top: 18px;
+      transition: background .2s;
+    }
+    .start-btnactive {
+      background: #ffe877;
+    }
+    .select-title {
+      font-size: 34px;
+      color: #187b2b;
+      text-shadow: 1px 1px 8px #fff, 0px 0px 8px #ffd700;
+      margin-bottom: 24px;
+    }
+    #characters {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 24px;
+    }
+    .character-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 0 16px #0002;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 12px 20px 12px;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      border: 4px solid transparent;
+      width: 170px;
+    }
+    .character-card.selected {
+      border-color: #ffd700;
+      transform: scale(1.08);
+      box-shadow: 0 0 30px #ffd7006b;
+    }
+    .character-img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 0 8px #0003;
+      background: #f7f7f7;
+      margin-bottom: 8px;
+    }
+    .character-name {
+      font-size: 24px;
+      font-weight: bold;
+      color: #187b2b;
+      text-shadow: 1px 1px 2px #ffd700;
+      margin-bottom: 6px;
+    }
+    .character-desc {
+      font-size: 15px;
+      color: #444;
+      margin-bottom: 3px;
+      text-align: center;
+    }
+    .select-btn {
+      font-size: 22px;
+      padding: 10px 38px;
+      border-radius: 12px;
+      background: #187b2b;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      box-shadow: 0 0 10px #0002;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background .2s;
+    }
+    .select-btnactive {
+      background: #145a1d;
+    }
+    #info, #score, #surpriseContainer, #failContainer, #gameCanvas {
+      z-index: 1;
+    }
+    #score {
+      position: absolute;
+      top: 18px;
+      left: 26px;
+      background: #fff8;
+      padding: 4px 18px;
+      border-radius: 10px;
+      font-family: sans-serif;
+      font-size: 22px;
+      font-weight: bold;
+      color: #187b2b;
+    }
+    #surpriseContainer {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 320px;
+      height: 390px;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      display: none;
+      pointer-events: none;
+    }
+    #surpriseText {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 34px;
+      font-family: 'Arial Black', Arial, sans-serif;
+      color: #ffd700;
+      text-shadow: 2px 2px 8px #000, 0px 0px 12px #187b2b;
+      font-weight: bold;
+      pointer-events: none;
+      user-select: none;
+    }
+    #surpriseScore {
+      position: absolute;
+      top: 54px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 26px;
+      font-family: 'Arial Black', Arial, sans-serif;
+      color: #fff;
+      text-shadow: 2px 2px 6px #187b2b, 0px 0px 10px #000;
+      font-weight: bold;
+      pointer-events: none;
+      user-select: none;
+    }
+    #surpriseGif {
+      position: absolute;
+      left: 0;
+      top: 90px;
+      width: 100%;
+      height: 200px;
+      object-fit: contain;
+      border-radius: 18px;
+      box-shadow: 0 0 30px #000b;
+      background: rgba(0,0,0,0.15);
+      display: block;
+    }
+    #restartBtnVictory {
+      position: absolute;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      font-size: 18px;
+      padding: 7px 32px;
+      border-radius: 10px;
+      background: #187b2b;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      box-shadow: 0 0 10px #0002;
+      cursor: pointer;
+      transition: background .2s;
+      pointer-events: all;
+    }
+    #restartBtnVictoryactive {
+      background: #145a1d;
+    }
+    #failContainer {
+      position: fixed;
+      top: 35%;
+      left: 50%;
+      width: 320px;
+      height: 210px;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      background: rgba(255,255,255,0.96);
+      border-radius: 16px;
+      box-shadow: 0 0 30px #000b;
+      display: none;
+      pointer-events: none;
+    }
+    #failText {
+      position: absolute;
+      top: 22px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 32px;
+      font-family: 'Arial Black', Arial, sans-serif;
+      color: #d00;
+      text-shadow: 2px 2px 8px #fff, 0px 0px 12px #222;
+      font-weight: bold;
+      pointer-events: none;
+      user-select: none;
+    }
+    #failGif {
+      position: absolute;
+      left: 0;
+      top: 70px;
+      width: 100%;
+      height: 110px;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 0 14px #000b;
+      background: rgba(0,0,0,0.13);
+      display: block;
+    }
+    #restartBtn {
+      position: absolute;
+      left: 50%;
+      bottom: 0px;
+      transform: translateX(-50%);
+      font-size: 15px;
+      padding: 7px 32px;
+      border-radius: 40px;
+      background: #187b2b;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      box-shadow: 0 0 10px #0002;
+      cursor: pointer;
+      transition: background .2s;
+      pointer-events: all;
+    }
+    #restartBtnactive {
+      background: #145a1d;
+    }
+    label {
+      font-family: sans-serif;
+      font-size: 15px;
+      color: #187b2b;
+      margin-bottom: 5px;
+    }
+    input[type=range] {
+      accent-color: #187b2b;
+    }
+    #angleValue, #pullValue {
+      font-family: monospace;
+      color: #444;
+      font-size: 15px;
+      margin-top: 2px;
+      width: 50px;
+      text-align: center;
+      border: 1px solid #cce3ff;
+      border-radius: 6px;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    input[type=number] {
+      width: 50px;
+      font-size: 15px;
+      font-family: monospace;
+      color: #444;
+      text-align: center;
+      border: 1px solid #187b2b;
+      border-radius: 6px;
+      background: #fff;
+      margin-top: 2px;
+      margin-bottom: 2px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <!-- Tela de início -->
+  <div id="startScreen">
+    <div class="start-title">Alien Stage X 🏹</div>
+    <button class="start-btn" id="startBtn">START</button>
+  </div>
+  <!-- Tela de seleção de personagem -->
+  <div id="selectScreen" style="display:none;">
+    <div class="select-title">Selecione seu personagem</div>
+    <div id="characters">
+      <!-- Personagens são inseridos via JS -->
+    </div>
+    <button class="select-btn" id="selectBtn" disabled>Jogar</button>
+  </div>
+  <canvas id="gameCanvas" width="900" height="500"></canvas>
+  <!-- Modal de sucesso -->
+  <div id="surpriseContainer">
+    <span id="surpriseText">Parabéns!</span>
+    <span id="surpriseScore"></span>
+    <img id="surpriseGif" src="" alt="Surpresa">
+    <button id="restartBtnVictory">Recomeçar</button>
+  </div>
+  <!-- Modal de falha -->
+  <div id="failContainer">
+    <span id="failText">Tente Novamente!</span>
+    <img id="failGif" src="" alt="Derrota" style="display:none;">
+    <button id="restartBtn">Recomeçar</button>
+  </div>
+  <div id="info">
+    Use o dedo ou mouse para puxar a flecha para trás.<br>
+    Mire e solte para atirar!<br>
+    Pontuação máxima: 100 em 10 flechas.
+  </div>
+  <div id="score">Pontuação 0</div>
+  <script>
+    // Personagens
+    const CHARACTERS = [
+      {
+        id: 'ivan',
+        nome: 'Ivan',
+        desc: 'O TOP!',
+        chooseImg: 'surprise3.png',
+        charImg: 'surprise.png',
+        winImg: 'Surprise1.png',
+        loseImg: 'Surprise2.png'
+      },
+      {
+        id: 'luka',
+        nome: 'Luka',
+        desc: 'O MAIS TOP!',
+        chooseImg: 'SurpriseL.png',
+        charImg: 'SurpriseLL.png',
+        winImg: 'SurpriseL1.png',
+        loseImg: 'SurpriseLL2.png'
+      }
+    ];
+    let selectedChar = null;
+
+    // Elementos da seleção
+    const startScreen = document.getElementById('startScreen');
+    const selectScreen = document.getElementById('selectScreen');
+    const startBtn = document.getElementById('startBtn');
+    const selectBtn = document.getElementById('selectBtn');
+    const charactersDiv = document.getElementById('characters');
+
+    startBtn.onclick = () => {
+      startScreen.style.display = 'none';
+      selectScreen.style.display = '';
+    };
+
+    // Renderiza os cards de personagens
+    CHARACTERS.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'character-card';
+      card.innerHTML = `
+        <img class="character-img" src="${c.chooseImg}" alt="${c.nome}">
+        <div class="character-name">${c.nome}</div>
+        <div class="character-desc">${c.desc}</div>
+      `;
+      card.onclick = () => {
+        document.querySelectorAll('.character-card').forEach(el => el.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedChar = c;
+        selectBtn.disabled = false;
+      };
+      charactersDiv.appendChild(card);
+    });
+
+    selectBtn.onclick = () => {
+      selectScreen.style.display = 'none';
+    };
+
+    // --- Jogo ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDiv = document.getElementById('score');
+    const surpriseContainer = document.getElementById('surpriseContainer');
+    const surpriseText = document.getElementById('surpriseText');
+    const surpriseGif = document.getElementById('surpriseGif');
+    const surpriseScore = document.getElementById('surpriseScore');
+    const restartBtnVictory = document.getElementById('restartBtnVictory');
+    const failContainer = document.getElementById('failContainer');
+    const failText = document.getElementById('failText');
+    const failGif = document.getElementById('failGif');
+    const restartBtn = document.getElementById('restartBtn');
+
+    const bowX = 140, bowY = canvas.height / 2, bowH = 120;
+    const arrowLength = 80;
+    let arrows = [];
+    let target = { x: canvas.width - 120, y: canvas.height / 2, r: 50 };
+    let score = 0;
+    let totalShots = 0;
+
+    let currentAngle = 0; // graus
+    let currentPull = 40;
+    let surpriseShown = false;
+    let failShown = false;
+
+    // Carrega imagens dos personagens e vitóriaderrota
+    const loadedImages = {};
+    CHARACTERS.forEach(c => {
+      loadedImages[c.charImg] = new Image(); loadedImages[c.charImg].src = c.charImg;
+      if (c.winImg) { loadedImages[c.winImg] = new Image(); loadedImages[c.winImg].src = c.winImg; }
+      if (c.loseImg) { loadedImages[c.loseImg] = new Image(); loadedImages[c.loseImg].src = c.loseImg; }
+      loadedImages[c.chooseImg] = new Image(); loadedImages[c.chooseImg].src = c.chooseImg;
+    });
+
+    function degToRad(deg) {
+      return deg * Math.PI / 180;
+    }
+
+    function drawCharacter() {
+      if (!selectedChar) return;
+      let charImg = loadedImages[selectedChar.charImg];
+      const imgWidth = 180;
+      const imgHeight = 240;
+      const imgX = bowX - imgWidth + 10;
+      const imgY = bowY - imgHeight / 2 + 40;
+      ctx.save();
+      ctx.globalAlpha = 1.0;
+      ctx.drawImage(charImg, imgX, imgY, imgWidth, imgHeight);
+      ctx.restore();
+      ctx.save();
+      ctx.font = "bold 24px sans-serif";
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#187b2b";
+      ctx.lineWidth = 3;
+      ctx.textAlign = "center";
+      ctx.strokeText(selectedChar.nome, imgX + imgWidth/2, imgY + imgHeight - 10);
+      ctx.fillText(selectedChar.nome, imgX + imgWidth/2, imgY + imgHeight - 10);
+      ctx.restore();
+    }
+
+    function drawBow(pull, angleRad) {
+      ctx.save();
+      ctx.strokeStyle = "#774c1a";
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.arc(bowX, bowY, bowH/2, Math.PI/2, Math.PI*3/2, true);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(bowX, bowY - bowH/2);
+      let cordX = bowX - pull * Math.cos(angleRad);
+      let cordY = bowY - pull * Math.sin(angleRad);
+      ctx.lineTo(cordX, cordY);
+      ctx.lineTo(bowX, bowY + bowH/2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(cordX, cordY);
+      ctx.rotate(angleRad);
+      ctx.strokeStyle = "#444";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(arrowLength, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = "#c33";
+      ctx.beginPath();
+      ctx.moveTo(arrowLength, 0);
+      ctx.lineTo(arrowLength - 10, -6);
+      ctx.lineTo(arrowLength - 10, 6);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#36b";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-10, -8);
+      ctx.lineTo(-10, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawTarget() {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.r, 0, Math.PI*2);
+      ctx.fillStyle = "white";
+      ctx.fill();
+
+      for (let i = 4; i >= 1; i--) {
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, target.r * i/5, 0, Math.PI*2);
+        ctx.fillStyle = i % 2 ? "#f22" : "#fff";
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.r/6, 0, Math.PI*2);
+      ctx.fillStyle = "#ffd700";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawArrows() {
+      for (let arrow of arrows) {
+        ctx.save();
+        ctx.translate(arrow.x, arrow.y);
+        ctx.rotate(arrow.angle);
+        ctx.strokeStyle = "#444";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(arrowLength, 0);
+        ctx.stroke();
+
+        ctx.fillStyle = "#c33";
+        ctx.beginPath();
+        ctx.moveTo(arrowLength, 0);
+        ctx.lineTo(arrowLength - 10, -6);
+        ctx.lineTo(arrowLength - 10, 6);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#36b";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-10, -8);
+        ctx.lineTo(-10, 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function draw3dFloor() {
+      ctx.save();
+      ctx.fillStyle = "#6b8a3b";
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height * 0.85);
+      ctx.lineTo(canvas.width, canvas.height * 0.85);
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "#fff4";
+      ctx.lineWidth = 2;
+      for (let i=0; i<10; i++) {
+        let px = 50 + i * 80;
+        ctx.beginPath();
+        ctx.moveTo(px, canvas.height * 0.85);
+        ctx.lineTo(canvas.width / 2, canvas.height * 0.45);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function updateArrows() {
+      for (let arrow of arrows) {
+        if (!arrow.hit) {
+          arrow.x += arrow.vx;
+          arrow.y += arrow.vy;
+          arrow.vy += 0.05;
+          arrow.angle = Math.atan2(arrow.vy, arrow.vx);
+
+          let tipX = arrow.x + arrowLength * Math.cos(arrow.angle);
+          let tipY = arrow.y + arrowLength * Math.sin(arrow.angle);
+          let dx = tipX - target.x;
+          let dy = tipY - target.y;
+          let dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < target.r && !arrow.hit) {
+            arrow.hit = true;
+            arrow.vx = 0;
+            arrow.vy = 0;
+            arrow.x = tipX - arrowLength * Math.cos(arrow.angle);
+            arrow.y = tipY - arrowLength * Math.sin(arrow.angle);
+            let pontos = Math.max(0, Math.round(100 - dist*2));
+            score += pontos;
+            scoreDiv.textContent = 'Pontuação ' + score + (pontos>0 ? `  (+${pontos})` : '');
+            setTimeout(()=>scoreDiv.textContent = 'Pontuação ' + score, 1200);
+          }
+        }
+      }
+    }
+
+    function showSurpriseGif(points) {
+      surpriseText.textContent = 'Parabéns!';
+      surpriseScore.textContent = `Pontuação ${points}`;
+      surpriseGif.src = selectedChar.winImg;
+      surpriseContainer.style.display = "block";
+      surpriseShown = true;
+    }
+
+    function showFailGif() {
+      failContainer.style.display = "block";
+      failShown = true;
+      if (selectedChar && selectedChar.loseImg) {
+        failGif.src = selectedChar.loseImg;
+        failGif.style.display = "block";
+      } else {
+        failGif.style.display = "none";
+      }
+    }
+
+    function hideFailGif() {
+      failContainer.style.display = "none";
+      failShown = false;
+    }
+    function hideSurpriseGif() {
+      surpriseContainer.style.display = "none";
+      surpriseShown = false;
+      surpriseScore.textContent = '';
+    }
+    // Botão de recomeçar (vitória e derrota)
+    function restartGame() {
+      hideFailGif();
+      hideSurpriseGif();
+      score = 0;
+      totalShots = 0;
+      arrows = [];
+      scoreDiv.textContent = 'Pontuação ' + score;
+      selectedChar = null;
+      document.querySelectorAll('.character-card').forEach(el=>el.classList.remove('selected'));
+      selectBtn.disabled = true;
+      selectScreen.style.display = '';
+    }
+    restartBtn.onclick = restartGame;
+    restartBtnVictory.onclick = restartGame;
+
+    // --- Controle por arrasto (mouse/touch) ---
+    let isDragging = false;
+    let dragStart = null; // {x, y}
+    let dragCurrent = null; // {x, y}
+
+    // Função para pegar coordenadas relativas ao canvas
+    function getCanvasCoords(evt) {
+      let rect = canvas.getBoundingClientRect();
+      let clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      let clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    // Inicia o arrasto
+    canvas.addEventListener('mousedown', (evt) => {
+      isDragging = true;
+      dragStart = getCanvasCoords(evt);
+      dragCurrent = dragStart;
+    });
+    canvas.addEventListener('touchstart', (evt) => {
+      isDragging = true;
+      dragStart = getCanvasCoords(evt);
+      dragCurrent = dragStart;
+    });
+
+    // Atualiza posição do arrasto
+    canvas.addEventListener('mousemove', (evt) => {
+      if (!isDragging) return;
+      dragCurrent = getCanvasCoords(evt);
+    });
+    canvas.addEventListener('touchmove', (evt) => {
+      if (!isDragging) return;
+      dragCurrent = getCanvasCoords(evt);
+    });
+
+    // Finaliza o arrasto e dispara a flecha
+    function shootByDrag() {
+      if (!dragStart || !dragCurrent) return;
+      // Vetor de arrasto
+      let dx = dragCurrent.x - dragStart.x;
+      let dy = dragCurrent.y - dragStart.y;
+
+      // Calcula ângulo (em graus)
+      let angleRad = Math.atan2(dy, dx);
+      let angleDeg = Math.round(angleRad * 180 / Math.PI);
+      // Força proporcional ao comprimento do arrasto (mínimo 10, máximo 90)
+      let force = Math.min(90, Math.max(10, Math.sqrt(dx*dx + dy*dy)));
+
+      // Atualiza controles internos
+      currentAngle = angleDeg;
+      currentPull = force;
+
+      // Dispara flecha
+      fireArrow(angleRad, force);
+
+      // Reseta arrasto
+      isDragging = false;
+      dragStart = null;
+      dragCurrent = null;
+    }
+
+    canvas.addEventListener('mouseup', (evt) => {
+      if (isDragging) shootByDrag();
+    });
+    canvas.addEventListener('touchend', (evt) => {
+      if (isDragging) shootByDrag();
+    });
+
+    // Função para disparar flecha com ângulo e força informados
+    function fireArrow(angleRad, pull) {
+      if (!selectedChar) return;
+      let speed = (8 + pull * 0.8);
+      let vx = speed * Math.cos(angleRad);
+      let vy = speed * Math.sin(angleRad);
+      let cordX = bowX - pull * Math.cos(angleRad);
+      let cordY = bowY - pull * Math.sin(angleRad);
+      arrows.push({
+        x: cordX,
+        y: cordY,
+        vx: vx,
+        vy: vy,
+        angle: angleRad,
+        hit: false
+      });
+      totalShots++;
+      // Lógica de pontuação e vitória/derrota igual ao fireButton (mantenha igual)
+      if (totalShots === 10) {
+        if (score >= 100) {
+          showSurpriseGif(score);
+          score = 0;
+          setTimeout(()=>scoreDiv.textContent = 'Pontuação ' + score, 1200);
+          totalShots = 0;
+          arrows = [];
+        } else {
+          showFailGif();
+          score = 0;
+          totalShots = 0;
+          arrows = [];
+          scoreDiv.textContent = 'Pontuação ' + score;
+        }
+      }
+    }
+
+    // Opcional: desenha linha de mira durante arrasto
+    function drawAimLine() {
+      if (isDragging && dragStart && dragCurrent) {
+        ctx.save();
+        ctx.strokeStyle = 'orange';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(dragStart.x, dragStart.y);
+        ctx.lineTo(dragCurrent.x, dragCurrent.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      draw3dFloor();
+      drawTarget();
+      drawCharacter();
+      drawArrows();
+      let pull = currentPull;
+      let angleRad = degToRad(currentAngle);
+      drawBow(pull, angleRad);
+      drawAimLine();
+    }
+
+    function loop() {
+      updateArrows();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // Esconde modais ao iniciar
+    hideFailGif();
+    hideSurpriseGif();
+
+    loop();
+  </script>
+</body>
+</html>
